@@ -1,144 +1,177 @@
-<div class="main-panel">
-  <div class="content-wrapper">
-    <div class="row">
-      <div class="col-md-12 grid-margin">
-        <div class="row">
-          <div class="col-12 col-md-6 order-md-1 order-last">
-            <h3><?=$title?></h3>
-            <h3>Halaman Data Users</h3>
-            <p class="text-subtitle text-muted">Berikut ini adalah data users <?=$title?></p>
-          </div>
-          <div class="col-12 col-md-6 order-md-2 order-first">
-            <nav aria-label="breadcrumb" class="breadcrumb-header float-start float-lg-end">
-              <!-- Breadcrumb jika diperlukan -->
-            </nav>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <section class="section">
-      <div class="card">
-        <div class="card-body">
-          <div class="table-responsive">
-            <div class="form-group">
-              <a href="<?=base_url('home/t_u')?>">
-                <button class="btn btn-success">Tambah Data users</button>
-              </a>
-              <a href="<?=base_url('home/print_u')?>">
-                <button class="btn btn-danger" id="printButton">Print Data users</button>
-              </a>
-            </div>
-            <table class="table table-striped" id="table1">
-              <thead>
-                <tr>
-                  <th>No</th>
-                  <th>Nama</th>
-                  <th>Email</th>
-                  <th>Nomor Telepon</th>
-                  <th>Jabatan</th>
-                  <th>Aksi</th>  
-                </tr>
-              </thead>
-              <tbody>
-                <?php
-                $no = 1;
-                foreach ($manda as $flora) {
-                  // Cari nama jabatan berdasarkan id_level
-                  $jabatanNama = 'Tidak Diketahui';
-                  foreach ($levels as $level) {
-                    if ($level->id_level == $flora->id_level) {
-                      $jabatanNama = $level->nama_level;
-                      break;
-                    }
-                  }
-                ?>
-                <tr>
-                  <td><?= $no++ ?></td>
-                  <td><?= $flora->nama_users ?></td>
-                  <td><?= $flora->email ?></td>
-                  <td><?= $flora->no_telp ?></td>
-                  <td><?= $jabatanNama ?></td>
-                  <td>
-                    <!-- Detail Button -->
-                    <button class="btn btn-info btn-sm" data-toggle="modal" data-target="#detailModal" data-id="<?= $flora->id_users ?>">Detail</button>
-                    <button class="btn btn-warning btn-sm" href="aksireset" data-id="<?= $flora->id_users ?>" id="resetPasswordBtn">Reset Password</button>
-                  </td>
-                </tr>
-                <?php
-                }
-                ?>
-              </tbody>
-            </table>
-          </div>
-        </div>
-      </div>
-    </section>
-  </div>
-</div>
-
-<!-- Modal -->
-<div class="modal fade" id="detailModal" tabindex="-1" role="dialog" aria-labelledby="detailModalLabel" aria-hidden="true">
-  <div class="modal-dialog" role="document">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title" id="detailModalLabel">Detail Pengguna</h5>
-        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-          <span aria-hidden="true">&times;</span>
-        </button>
-      </div>
-      <div class="modal-body">
-        <form id="userDetailForm" action="<?= base_url('home/update_users') ?>" method="POST">
-          <input type="hidden" id="user_id" name="user_id">
-          <div class="form-group">
-            <label for="nama_users">Nama</label>
-            <input type="text" class="form-control" id="nama_brg" name="nama_users" value="<?= $flora->nama_users?>" required>
-          </div>
-          <div class="form-group">
-            <label for="email">Email</label>
-            <input type="text" class="form-control" id="email" name="email" value="<?= $flora->email?>" required>
-          </div>
-          <div class="form-group">
-            <label for="no_telp">Nomor Telepon</label>
-           <input type="text" class="form-control" id="no_telp" name="no_telp" value="<?= $flora->no_telp?>" required>
-          </div>
-          <div class="form-group">
-            <label for="id_level">Jabatan</label>
-            <select class="form-control" id="id_level" name="id_level">
-              <?php foreach ($levels as $level): ?>
-                <option value="<?= $level->id_level ?>"><?= $level->nama_level ?></option>
-              <?php endforeach; ?>
-            </select>
-          </div>
-          <div class="form-group d-inline-block">
-            <button type="submit" class="btn btn-danger">Simpan</button>
-            <a href="<?= base_url('home/delete_users/'.$flora->id_users) ?>" class="btn btn-danger">Hapus</a>
-          </div>
-        </form>
-      </div>
-    </div>
-  </div>
-</div>
-
-<script>
-  $(document).ready(function() {
-    $('#detailModal').on('show.bs.modal', function(event) {
-      var button = $(event.relatedTarget);
-      var userId = button.data('id');
-
-      $.ajax({
-        url: '<?= base_url('home/get_user') ?>', // Update URL jika perlu
-        method: 'POST',
-        data: { id: userId },
-        dataType: 'json',
-        success: function(data) {
-          $('#user_id').val(data.id_users);
-          $('#nama_users').val(data.nama_users);
-          $('#email').val(data.email);
-          $('#no_telp').val(data.no_telp);
-          $('#id_level').val(data.id_level);
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Data Users</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <style>
+        .container {
+            margin-top: 20px;
         }
-      });
+        .table-section {
+            margin-top: 20px;
+            overflow-x: auto; /* Menambahkan scroll horizontal jika tabel terlalu lebar */
+        }
+        table {
+            min-width: 1000px; /* Menambahkan lebar minimum agar tabel tidak terlalu kecil */
+        }
+        .modal-dialog {
+            margin-top: 10%; /* Menurunkan posisi modal agar tidak menutupi data */
+        }
+        .modal-header {
+            background-color: #007bff; /* Warna biru untuk header modal */
+            color: white;
+        }
+        .modal-body {
+            padding: 20px; /* Padding yang sesuai untuk tampilan modal */
+        }
+        .modal-content {
+            border-radius: 10px; /* Border radius yang lebih lembut */
+        }
+        .modal-footer {
+            padding: 15px; /* Padding untuk footer modal */
+        }
+        .btn-primary {
+            background-color: #28a745; /* Warna hijau untuk tombol */
+            border-color: #28a745;
+        }
+        .btn-primary:hover {
+            background-color: #218838;
+            border-color: #1e7e34;
+        }
+        .modal-title {
+            font-weight: 600; /* Menambah ketebalan font untuk judul modal */
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2 class="mt-4 mb-4">Data Users</h2>
+
+        <!-- Notification -->
+        <?php if (session()->getFlashdata('status')): ?>
+            <div class="alert alert-success">
+                <?= session()->getFlashdata('status') ?>
+            </div>
+        <?php endif; ?>
+
+        <!-- Table Section -->
+        <div class="table-section">
+            <table class="table table-bordered table-striped">
+                <thead>
+                    <tr>
+                        <th>Username</th>
+                        <th>Email</th>
+                        <th>Level</th>
+                        <th>Foto</th>
+                        <th>Detail</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php if (!empty($users) && is_array($users)): ?>
+                        <?php foreach ($users as $user): ?>
+                            <tr>
+                                <td><?= esc($user['username']) ?></td>
+                                <td><?= esc($user['email']) ?></td>
+                                <td><?= esc($user['id_level']) ?></td>
+                               <td>
+    <?php if (!empty($user['foto'])): ?>
+        <button class="btn btn-info btn-foto" data-toggle="modal" data-target="#fotoModal" 
+            data-foto ="<?= base_url('path_to_current_image/' . $user->foto) ?>">Lihat Foto</button>
+    <?php else: ?>
+        Tidak ada foto
+    <?php endif; ?>
+</td>
+
+                                <td>
+                                    <button class="btn btn-primary btn-detail" data-toggle="modal" data-target="#detailModal" 
+                                        data-username="<?= esc($user['username']) ?>"
+                                        data-email="<?= esc($user['email']) ?>"
+                                        data-id_level="<?= esc($user['id_level']) ?>"
+                                        data-foto="<?= esc($user['foto']) ?>"> 
+                                        Detail
+                                    </button>
+                                </td>
+                            </tr>
+                        <?php endforeach; ?>
+                    <?php else: ?>
+                        <tr>
+                            <td colspan="5" class="text-center">Tidak ada data.</td>
+                        </tr>
+                    <?php endif; ?>
+                </tbody>
+            </table>
+        </div>
+    </div>
+<!-- Modal Lihat Foto -->
+<div class="modal fade" id="fotoModal" tabindex="-1" role="dialog" aria-labelledby="fotoModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="fotoModalLabel">Foto User</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body text-center">
+                <img id="fotoUser" src="" alt="Foto User" class="img-fluid">
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Tutup</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+    <!-- Modal Detail -->
+    <div class="modal fade" id="detailModal" tabindex="-1" role="dialog" aria-labelledby="detailModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="detailModalLabel">Detail User</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <p><strong>Username:</strong> <span id="modalUsername"></span></p>
+                    <p><strong>Email:</strong> <span id="modalEmail"></span></p>
+                    <p><strong>Level:</strong> <span id="modalIdLevel"></span></p>
+                    <p><strong>Foto:</strong> <img id="modalFoto" src="" alt="Foto User" width="100"></p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Tutup</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Script untuk mengisi modal dengan data detail -->
+    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.2/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <script>
+        $(document).ready(function() {
+            $('.btn-detail').on('click', function() {
+                var username = $(this).data('username');
+                var email = $(this).data('email');
+                var idLevel = $(this).data('id_level');
+                var foto = $(this).data('foto');
+
+                $('#modalUsername').text(username);
+                $('#modalEmail').text(email);
+                $('#modalIdLevel').text(idLevel);
+               $(document).ready(function() {
+    $('.btn-foto').on('click', function() {
+        var foto = $(this).data('foto');
+        $('#fotoUser').attr('src', 'C:/bisnis/public/images/' + foto);
     });
-  });
-</script>
+});
+
+
+            });
+        });
+    </script>
+</body>
+</html>
